@@ -22,17 +22,22 @@ dat_fish_fs3 <- read_csv('data/ltrm_fish_data_fs3.csv')
 dat_veg_vel_fs123 <- read.csv('data/ltrm_veg_vel_data_fs123_2224.csv')
 
 #____d) discharge----
+
+
+### to get the url for data, open file (.csv) in Github, then click on "Raw" button ###
+# raw data url method not working all of a sudden : 
+# dat_q_ld4 <- read_csv('https://raw.githubusercontent.com/Lake-City-LTRM/hydrology/refs/heads/main/data/q_ld4_collated.csv')
+# dat_q_ld8 <- read_csv("https://raw.githubusercontent.com/Lake-City-LTRM/hydrology/refs/heads/main/data/q_ld8_collated.csv")
+# dat_q_ld10 <- read_csv('https://raw.githubusercontent.com/Lake-City-LTRM/hydrology/refs/heads/main/data/q_ld10_collated.csv')
+
 #______i) LD4----
-
-### to get the url for raw data, open file (.csv) in Github, then click on "Raw" button ###
-
-dat_q_ld4 <- read_csv("https://raw.githubusercontent.com/Lake-City-LTRM/hydrology/refs/heads/main/data/q_ld4_collated.csv")
+dat_q_ld4 <- read_csv('data/q_ld4_collated.csv')
 
 #______ii) LD8----
-dat_q_ld8 <- read_csv("https://raw.githubusercontent.com/Lake-City-LTRM/hydrology/refs/heads/main/data/q_ld8_collated.csv")
+dat_q_ld8 <- read_csv('data/q_ld8_collated.csv')
 
 #______iii) LD10----
-dat_q_ld10 <- read_csv('https://raw.githubusercontent.com/Lake-City-LTRM/hydrology/refs/heads/main/data/q_ld10_collated.csv')
+dat_q_ld10 <- read_csv('data/q_ld10_collated.csv')
 
 
 
@@ -143,11 +148,16 @@ rm(dat_wq_vel_fs123)
 # other temporary dataframes
 rm(dat_wq_srs_fs123_surf)
 rm(dat_wq_srs_fs123_surf_sprsumfal)
-rm(dat_wq_vel_strat_summary)
+
 
 
 #__2. Fisheries Velocity Data----
-#____a) parse Site Level data ----
+
+#____a) combine data from 3 field stations----
+
+dat_fish_fs123 <- rbind(dat_fish_fs1, dat_fish_fs2, dat_fish_fs3)
+
+#____b) parse Site Level data ----
 
 # identify one record per barcode as new 'sites' dataframe
 
@@ -165,13 +175,13 @@ dat_fish_sites_fs123 <- dplyr::select (dat_fish_unique_barcodes_fs123, c('site',
 
 
 
-#____b)  filter relevant site data----
+#____c)  filter relevant site data----
 
 dat_fish_vel_fs123 <- dplyr::select (dat_fish_sites_fs123, c('barcode', 'fstation', 'stratum', 
                                                              'sdate', 'pool', 'zone15e', 'zone15n', 
                                                              'current', 'cv_qf'))
 
-#____c) exclude values----  
+#____d) exclude values----  
 
 #______i)exclude approx 4200 current velocity NA values----
 dat_fish_vel_fs123 <- subset(dat_fish_vel_fs123, !is.na(current))
@@ -183,10 +193,10 @@ dat_fish_vel_fs123 <- subset(dat_fish_vel_fs123, is.na(cv_qf))
 
 
 
-#____d)  add component ('comp') column and populate with 'f' (fish)----
+#____e)  add component ('comp') column and populate with 'f' (fish)----
 dat_fish_vel_fs123$comp <- "f" 
 
-#____e) standardize column names----
+#____f) standardize column names----
 
 # view current column names
 # head(dat_fish_vel_fs123)
@@ -203,10 +213,10 @@ names(dat_fish_vel_fs123)[names(dat_fish_vel_fs123) == 'cv_qf'] <- 'vel_qf'
 # head(dat_fish_vel_fs123)
 # barcode fstation stratum DATE pool  z15east z15north   vel vel_qf comp 
 
-#____f) standardize column order----
+#____g) standardize column order----
 dat_fish_vel_final <- dat_fish_vel_fs123[,c(1, 10, 2, 5, 3, 4, 6, 7, 8, 9)]
 
-#____g) replace pool character values with numeric----
+#____h) replace pool character values with numeric----
 dat_fish_vel_final$pool[dat_fish_vel_final$pool == '04'] <- 4
 dat_fish_vel_final$pool[dat_fish_vel_final$pool == '08'] <- 8
 dat_fish_vel_final$pool[dat_fish_vel_final$pool == '13'] <- 13
@@ -221,7 +231,11 @@ dat_fish_vel_final <- dat_fish_vel_final %>%
 # barcode comp  fstation  pool stratum DATE       z15east z15north   vel vel_qf
 
 ### clean environment of temporarty fish dataframes ###
-# original raw data - all
+# original raw data - 3 field stations
+rm(dat_fish_fs1)
+rm(dat_fish_fs2)
+rm(dat_fish_fs3)
+# original raw data - combined 3 field stations
 rm(dat_fish_fs123)
 # original site level data
 rm(dat_fish_sites_fs123)
@@ -273,12 +287,6 @@ dat_veg_vel_final <- dat_veg_vel_fs123[,c(1, 9, 2, 3, 4, 5, 6, 7, 8, 10)]
 # original raw data prior to QAQC
 rm(dat_veg_vel_fs123)
 
-#__4. Discharge Data----
-
-#____a) filter data up to year 2024----
-
-
-
 # C. MERGE LTRM AND DISCHARGE DATA----
 
 #__1. few more ltrm data manipulations----
@@ -297,7 +305,7 @@ dat_wq_vel_final <- dat_wq_vel_final %>%
 dat_fish_vel_final <- dat_fish_vel_final %>%
   mutate(pool = as.numeric(pool))
 
-#__2. combine 3 LTRM velocity dataframes ----
+#__2. combine 3 LTRM component velocity dataframes ----
 ##with bind_rows function (dplyr package)
 dat_vel_p4p8p13_wfv <- dplyr::bind_rows(dat_wq_vel_final, dat_fish_vel_final, dat_veg_vel_final)
 
@@ -346,229 +354,206 @@ dat_vel_p4p8p13_wfv <-
 
 #____b) remove BWI ???----
 
+#__4. Split velocity datasets by reach----
 
-#__3. Merge discharge data from multiple pools.----
-# ***requires dplyr package (in tidyverse)***
+### Pool 4 ###
+dat_vel_wvf_p4 <- dat_vel_p4p8p13_wfv %>%
+  filter(pool == 4)
 
-#join ld4 and ld8 discharge data
-dat_q_ld4_ld8 <- dplyr::left_join(dat_q_ld8, dat_q_ld4, by=c("date"))
-#join ld4_ld8 to ld10 discharge data
-dat_q_ld4_ld8_ld10 <- dplyr::left_join(dat_q_ld4_ld8, dat_q_ld10, by=c("date"))
+### Pool 4 - Upper ###
+dat_vel_wvf_p4u <- dat_vel_p4p8p13_wfv %>%
+  filter(reach == '4u')
 
-#select relevant columns from merged discharge dataset
-dat_q_p4p8p10 <- dplyr::select (dat_q_ld4_ld8_ld10, c('date', 'year', 'month', 'cfs_ld4', 'cfs_ld8', 'cfs_ld10'))
+### Pool 4 - Lower ###
+dat_vel_wvf_p4l <- dat_vel_p4p8p13_wfv %>%
+  filter(reach == '4l')
+
+### Pool 8 ###
+dat_vel_wvf_p8 <- dat_vel_p4p8p13_wfv %>%
+  filter(pool == 8)
+
+### Pool 13 ###
+dat_vel_wvf_p13 <- dat_vel_p4p8p13_wfv %>%
+  filter(pool == 13)
+
+#__6. merge velocity and discharge dataframes----
+
+### Pool 4 (Entire) ###
+### need this dataframe for calculating low, mod, high discharge categories...###
+### ... to apply to P4u and P4l reaches ###
+
+# select only date and cfs columns from discharge data #
+dat_q_ld4_select <- dplyr::select (dat_q_ld4, c('date', 'cfs'))
+# join discharge to velocity dataset for entire pool #
+dat_vel_q_p4 <- dplyr::left_join(dat_vel_wvf_p4, dat_q_ld4_select, by=c("date"))
+
+### Pool 4 - Upper ###
+
+#join discharge to velocity dataset by date #
+dat_vel_q_p4u <- dplyr::left_join(dat_vel_wvf_p4u, dat_q_ld4_select, by=c("date"))
+
+### Pool 4 - Lower ###
+
+# select only date and cfs columns from discharge data #
+#join discharge to velocity dataset by date #
+dat_vel_q_p4l <- dplyr::left_join(dat_vel_wvf_p4l, dat_q_ld4_select, by=c("date"))
+
+### Pool 8 ###
+
+# select only date and cfs columns from discharge data #
+dat_q_ld8_select <- dplyr::select (dat_q_ld8, c('date', 'cfs'))
+#join discharge to velocity dataset by date #
+dat_vel_q_p8 <- dplyr::left_join(dat_vel_wvf_p8, dat_q_ld8_select, by=c("date"))
+
+### Pool 13 ###
+
+# select only date and cfs columns from discharge data #
+dat_q_ld10_select <- dplyr::select (dat_q_ld10, c('date', 'cfs'))
+#join discharge to velocity dataset by date #
+dat_vel_q_p13 <- dplyr::left_join(dat_vel_wvf_p13, dat_q_ld10_select, by=c("date"))
+
+#____a) clean environment ----
+rm(dat_q_ld4_select)
+rm(dat_q_ld8_select)
+rm(dat_q_ld10_select)
+rm(dat_wq_vel_final)
+rm(dat_fish_vel_final)
+rm(dat_veg_vel_final)
+rm(dat_vel_wvf_p4)
+rm(dat_vel_wvf_p8)
+rm(dat_vel_wvf_p13)
 
 
+#__7. add discharge 'category' and vel:q ratio columns...----
 
-#__4. merge velocity and discharge dataframes----
-dat_vel_q_p4p8p13 <- dplyr::left_join(dat_vel_p4p8p13_wfv, dat_q_p4p8p10, by=c("date"))
+#____a) calculate discharge low, high values ----
+### from daily values 1993-2024 + already excludes winter ###
 
+### assign percentile values to variables ###
 
-
-#____a) calculate 0.33, 0.66 percentiles of discharge at each L&D----
-
-
-
-#_____i) calculate discharge low, high values ----
-###from daily values 1993-2024 excluding winter
-
-#filter for data years 1993-2024
-dat_q_p4p8p10_9324 <- dat_q_p4p8p10 %>% filter (year > 1992 & year < 2025)
-
-#filter for non-winter data
-dat_q_p4p8p10_9324_sprsumfal <- dat_q_p4p8p10_9324 %>% filter (month > 2 & month < 12)
-
-
-#assign percentile values to variables
-
-###LD4
-qlow_ld4 <- quantile(dat_q_p4p8p10_9324_sprsumfal$cfs_ld4, probs = c(0.33))
+### LD4 ###
+qlow_ld4 <- quantile(dat_vel_q_p4$cfs, probs = c(0.33), na.rm=TRUE)
 # 33% 
-# 23800
-qhigh_ld4 <- quantile(dat_q_p4p8p10_9324_sprsumfal$cfs_ld4, probs = c(0.66))
+# 21300
+qhigh_ld4 <- quantile(dat_vel_q_p4$cfs, probs = c(0.66), na.rm=TRUE)
 # 66%
-# 47600
+# 46000
 
-###ld8
-qlow_ld8  <- quantile(dat_q_p4p8p10_9324_sprsumfal$cfs_ld8, probs = c(0.33))
+### ld8 ###
+qlow_ld8  <- quantile(dat_vel_q_p8$cfs, probs = c(0.33))
 #   33% 
-# 31700
-qhigh_ld8 <- quantile(dat_q_p4p8p10_9324_sprsumfal$cfs_ld8, probs = c(0.66))
+# 30100
+qhigh_ld8 <- quantile(dat_vel_q_p8$cfs, probs = c(0.66))
 #   66% 
-# 59400 
-
-###ld10
-qlow_ld10  <- quantile(dat_q_p4p8p10_9324_sprsumfal$cfs_ld10, probs = c(0.33))
+# 57800 
+ 
+### ld10 ###
+qlow_ld10  <- quantile(dat_vel_q_p13$cfs, probs = c(0.33))
 #   33% 
-# 40900
-qhigh_ld10 <- quantile(dat_q_p4p8p10_9324_sprsumfal$cfs_ld10, probs = c(0.66))
+# 36700
+qhigh_ld10 <- quantile(dat_vel_q_p13$cfs, probs = c(0.66))
 #   66% 
-# 74800
+# 65500
 
 
-#____b) create new discharge category column (q_cat)----
-##and populate based on 33rd, 66th percentile values
-###for respective pools
+#____b) add discharge category and...----
+###...and populate based on 33rd, 66th percentile values for respective pools ###
 
-#Pool 4
-dat_vel_q_p4p8p13$q_cat[dat_vel_q_p4p8p13$pool == 4 & dat_vel_q_p4p8p13$cfs_ld4 <= qlow_ld4 ] <- 'Low'
-dat_vel_q_p4p8p13$q_cat[dat_vel_q_p4p8p13$pool == 4 & dat_vel_q_p4p8p13$cfs_ld4 > qlow_ld4 & 
-                          dat_vel_q_p4p8p13$cfs_ld4 <= qhigh_ld4 ] <- 'Mod'
-dat_vel_q_p4p8p13$q_cat[dat_vel_q_p4p8p13$pool == 4 & dat_vel_q_p4p8p13$cfs_ld4 > qhigh_ld4 ] <- 'High'
+### Pool 4 - Upper ###
+dat_vel_q_p4u <- dat_vel_q_p4u %>% mutate(q_cat = case_when(cfs <= qlow_ld4 ~ 'Low',
+                                                          cfs > qlow_ld4 & cfs <= qhigh_ld4 ~ 'Mod',
+                                                          cfs > qhigh_ld4 ~ ' High'))
 
-#Pool 8
-dat_vel_q_p4p8p13$q_cat[dat_vel_q_p4p8p13$pool == 8 & dat_vel_q_p4p8p13$cfs_ld8 <= qlow_ld8 ] <- 'Low'
-dat_vel_q_p4p8p13$q_cat[dat_vel_q_p4p8p13$pool == 8 & dat_vel_q_p4p8p13$cfs_ld8 > qlow_ld8 & 
-                          dat_vel_q_p4p8p13$cfs_ld8 <= qhigh_ld8 ] <- 'Mod'
-dat_vel_q_p4p8p13$q_cat[dat_vel_q_p4p8p13$pool == 8 & dat_vel_q_p4p8p13$cfs_ld8 > qhigh_ld8 ] <- 'High'
+### Pool 4 - Lower ###
+dat_vel_q_p4l <- dat_vel_q_p4l %>% mutate(q_cat = case_when(cfs <= qlow_ld4 ~ 'Low',
+                                                            cfs > qlow_ld4 & cfs <= qhigh_ld4 ~ 'Mod',
+                                                            cfs > qhigh_ld4 ~ ' High'))
 
-#Pool 13 (based off L&D10 data)
-dat_vel_q_p4p8p13$q_cat[dat_vel_q_p4p8p13$pool == 13 & dat_vel_q_p4p8p13$cfs_ld10 <= qlow_ld10 ] <- 'Low'
-dat_vel_q_p4p8p13$q_cat[dat_vel_q_p4p8p13$pool == 13 & dat_vel_q_p4p8p13$cfs_ld10 > qlow_ld10 & 
-                          dat_vel_q_p4p8p13$cfs_ld10 <= qhigh_ld10 ] <- 'Mod'
-dat_vel_q_p4p8p13$q_cat[dat_vel_q_p4p8p13$pool == 13 & dat_vel_q_p4p8p13$cfs_ld10 > qhigh_ld10 ] <- 'High'
+### Pool 8 ###
+dat_vel_q_p8 <- dat_vel_q_p8 %>% mutate(q_cat = case_when(cfs <= qlow_ld8 ~ 'Low',
+                        cfs > qlow_ld8 & cfs <= qhigh_ld8 ~ 'Mod',
+                        cfs > qhigh_ld8 ~ ' High'))
 
-#count q_cat values by pool, check for NA
-dat_vel_q_p4p8p13 %>%
-  group_by(q_cat, pool) %>%
-  summarise(m = n())
+### Pool 13 (based off L&D10 data) ###
+dat_vel_q_p13 <- dat_vel_q_p13 %>% mutate(q_cat = case_when(cfs <= qlow_ld10 ~ 'Low',
+                                                          cfs > qlow_ld10 & cfs <= qhigh_ld10 ~ 'Mod',
+                                                          cfs > qhigh_ld10 ~ ' High'))
 
-# A tibble: 9 × 3
-# Groups:   q_cat [3]
-# q_cat  pool     m
-# <chr> <dbl> <int>
-# 1 High      4  5089
-# 2 High      8  7631
-# 3 High     13  6514
-# 4 Low       4  5855
-# 5 Low       8  8586
-# 6 Low      13  8033
-# 7 Mod       4  5016
-# 8 Mod       8  7307
-# 9 Mod      13  6271
+
+### optional: count q_cat values by pool, check for NA
+# dat_vel_q_p13 %>%
+#  group_by(q_cat) %>%
+#  summarise(n = n())
+
+### *** pool 4 has 18 NA values - need to look into those ***
 
 #____c) calculate vel:q ratio----
 
-###create new column 'cv_cm' (velocity in cm) and calculate 
-dat_vel_q_p4p8p13$cv_cm <- dat_vel_q_p4p8p13$vel * 100
+### create new column 'cv_cm' (velocity in cm) and calculate ###
 
-###create new column 'q_10k' (discharge / 10000) and calculate 
-dat_vel_q_p4p8p13$q_10k[dat_vel_q_p4p8p13$pool == 4] <-  dat_vel_q_p4p8p13$cfs_ld4 / 10000
-dat_vel_q_p4p8p13$q_10k[dat_vel_q_p4p8p13$pool == 8] <-  dat_vel_q_p4p8p13$cfs_ld8 / 10000
-dat_vel_q_p4p8p13$q_10k[dat_vel_q_p4p8p13$pool == 13] <-  dat_vel_q_p4p8p13$cfs_ld10 / 10000
+### Pool 4 - Upper ###
+dat_vel_q_p4u <- dat_vel_q_p4u %>% mutate(vq_ratio = (vel * 100) / (cfs / 10000))
+### Pool 4 - Lower ###
+dat_vel_q_p4l <- dat_vel_q_p4l %>% mutate(vq_ratio = (vel * 100) / (cfs / 10000))
+### Pool 8 ###
+dat_vel_q_p8 <- dat_vel_q_p8 %>% mutate(vq_ratio = (vel * 100) / (cfs / 10000))
+### Pool 13 ###
+dat_vel_q_p13 <- dat_vel_q_p13 %>% mutate(vq_ratio = (vel * 100) / (cfs / 10000))
 
-###create new 'vq__ratio' (velocity in cm / Q in 10k) column and calculate
-dat_vel_q_p4p8p13$vq_ratio <- dat_vel_q_p4p8p13$cv_cm / dat_vel_q_p4p8p13$q_10k
+#__8. Clean Environment----
+rm(dat_q_ld4_selct)
+rm(dat_vel_p4p8p13_wfv)
+rm(dat_vel_q_p4)
+rm(dat_vel_wvf_p4l)
+rm(dat_vel_wvf_p4u)
+rm(dat_vel_wvf_p4)
+rm(dat_vel_wvf_p8)
+rm(dat_vel_wvf_p13)
+rm(dat_q_ld10)
+rm(dat_q_ld4)
+rm(dat_q_ld8)
 
-#D.  EXPORT FINAL DATASETS----
-##as .csv to plot in GIS, 1 for each reach---
+#D. PARTITION DATA----
+### Training and Testing Datasets ###
 
-###filter for each reach
-dat_pre_gis_r4u <- dat_vel_q_p4p8p13 %>% filter (reach == '4u') ###this will exclude the Pepin adjacent BWC sites
-dat_pre_gis_r4l <- dat_vel_q_p4p8p13 %>% filter (reach == '4l') ###this will exclude the Pepin adjacent BWC sites
-dat_pre_gis_r8 <- dat_vel_q_p4p8p13 %>% filter (reach == '8')
-dat_pre_gis_r13 <- dat_vel_q_p4p8p13 %>% filter (reach == '13')
+#__1. denote 'train' and 'test' records...----
 
-###write to .csv
-write.csv(dat_pre_gis_r4u, paste(path_ltrm_data, "/", 'dat_pre_gis_r4u.csv', sep = ""), row.names = FALSE)
-write.csv(dat_pre_gis_r4l, paste(path_ltrm_data, "/", 'dat_pre_gis_r4l.csv', sep = ""), row.names = FALSE)
-write.csv(dat_pre_gis_r8, paste(path_ltrm_data, "/", 'dat_pre_gis_r8.csv', sep = ""), row.names = FALSE)
-write.csv(dat_pre_gis_r13, paste(path_ltrm_data, "/", 'dat_pre_gis_r13.csv', sep = ""), row.names = FALSE)
+# sort by discharge category and northing then... #
+# every 10th row = 'test' and remaining rows = 'train' in new column 'dataset' #
 
+### Pool 4 - Upper ###
+dat_vel_q_p4u <- dat_vel_q_p4u %>%
+  arrange(q_cat, z15east) %>%
+  mutate(dataset = if_else(row_number() %% 10 == 0, 'test', 'train'))
 
+### Pool 4 - Lower ###
+dat_vel_q_p4l <- dat_vel_q_p4l %>%
+  arrange(q_cat, desc(z15north)) %>%
+  mutate(dataset = if_else(row_number() %% 10 == 0, 'test', 'train'))
 
-#D. PARTITION DATA post-GIS
+### Pool 8 ###
+dat_vel_q_p8 <- dat_vel_q_p8 %>%
+  arrange(q_cat, desc(z15north)) %>%
+  mutate(dataset = if_else(row_number() %% 10 == 0, 'test', 'train'))
 
+### Pool 13 ###
+dat_vel_q_p13 <- dat_vel_q_p13 %>%
+  arrange(q_cat, desc(z15north)) %>%
+  mutate(dataset = if_else(row_number() %% 10 == 0, 'test', 'train'))
 
-#X. Optional Misc Data checks----
+# **** note that all pools have BWI records and ultimately we may want to...
+# ... remove these from P4u (n=14), P4L (n=3), P13 (n=30) but not P8 (n=915) ****
 
-#scatterplot of discharge between pools to look for outliers
-ggplot(dat_q_p4p8, aes(x=cfs_ld4/1000, y=cfs_ld8/1000)) +
-  geom_point()
+#E.  EXPORT FINAL DATASETS----
 
-#count records by component and month
-dat_vel_p4p8p13_wfv %>%
-  group_by(comp, month) %>%
-  summarise(m = n())
-
-#double check for vel_qf values by component - only WQ should have "3" values, rest are NA
-dat_vel_p4p8p13_wfv %>%
-  group_by(comp, vel_qf) %>%
-  summarise(m = n())
-
-
-#count velocity records by qf codes
-dat_wq_vel_fs123_exclude_NA %>%
-  group_by(VELQF, FLDNUM) %>%
-  summarise(m = n())
-
-#count velocity records after excluding QF code flag values
-dat_wq_vel_fs123_exclude_qf %>%
-  group_by(VELQF, FLDNUM) %>%
-  summarise(m = n())
-
-#count velocity records by pool
-dat_fish_vel_fs123_exclude_qf %>%
-  group_by(pool) %>%
-  summarise(m = n())
-
-#Y. To Do: ----
-
-#after GIS spatial analuses (nearest aquatic area and strata polygon), export data tables and
-##remove sites outside aqauatic areas and or strata then
-
-#partition data in R
-
-#Z.Some early analysis code s for archive ----
-
-#___1) historical daily Q values (1959-2024)----
-
-#ld4
-q_percentile_ld4 <- quantile(dat_q_p4p8$cfs_ld4, probs = c(0.33, 0.66))
-#  33%   66% 
-# 17300 34000 
-
-#ld8
-q_percentile_ld8 <- quantile(dat_q_ld8$cfs_ld8, probs = c(0.33, 0.66))
-#  33%   66% 
-# 21500 42900 
-
-#ld10
-q_percentile_ld10 <- quantile(dat_q_ld10$cfs_ld10, probs = c(0.33, 0.66))
-#  33%   66% 
-# 30300 53300 
-
-#______a) scatterplot of discharge between pools ----
-###to assess use of ld10 for pool 13
-ggplot(dat_q_p4p8p10, aes(x=cfs_ld8, y=cfs_ld10)) +
-  geom_point()
-
-#______b) Initial attempts to fill in missing discharge data---- 
-####source data ultimately updated prior to import into R
-
-#__10/8/2018 LD4----
-#add row(s) for data missing data
-#for L&D4 on 10/8/2018
-#use 57540 (value between 10/7 and 10/9)
-#head(dat_q_ld4_orig)
-
-#dat_q_ld4_missing <- data.frame("10/8/2018 12:00", "57540")
-#names(dat_q_ld4_missing)<-c("Date.Time", "cfs_ld4")
-
-#dat_q_ld4 <- rbind(dat_q_ld4_orig, dat_q_ld4_missing)
-
-#__7/27/2019 LD4----
-
-#right_join yielded single NA value for 'cfs_ld4' for date = 7/27/2019, so...
-#...manually replace with 72650 (difference between 7/26/2019 and 7/28/2019)
-#dat_q_p4p8$cfs_ld4[dat_q_p4p8$date == '2019-07-27'] <- 72650
-
-#dat_q_p4p8l$cfs_ld4 <- as.numeric(as.character(dat_q_p4p8l$cfs_ld4))
-
-#__2. not working----
-#dat_q_ld4 %>% add_row(Date.Time = "10/8/2018 12:00", cfs_ld4 = 57540)
+### write to .csv in git velocity repo, data folder ###
+### 1 file for each reach ###
+write_csv(dat_vel_q_p4u, 'data/dat_vel_traintest_p4u.csv')
+write_csv(dat_vel_q_p4l, 'data/dat_vel_traintest_p4l.csv')
+write_csv(dat_vel_q_p8, 'data/dat_vel_traintest_p8.csv')
+write_csv(dat_vel_q_p13, 'data/dat_vel_traintest_p13.csv')
 
 
-
+#F. PARTITION DATA post-GIS
 
 
