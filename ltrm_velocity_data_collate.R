@@ -26,18 +26,19 @@ dat_veg_vel_fs123 <- read.csv('data/ltrm_veg_vel_data_fs123_2224.csv')
 
 ### to get the url for data, open file (.csv) in Github, then click on "Raw" button ###
 # raw data url method not working all of a sudden : 
-# dat_q_ld4 <- read_csv('https://raw.githubusercontent.com/Lake-City-LTRM/hydrology/refs/heads/main/data/q_ld4_collated.csv')
-# dat_q_ld8 <- read_csv("https://raw.githubusercontent.com/Lake-City-LTRM/hydrology/refs/heads/main/data/q_ld8_collated.csv")
-# dat_q_ld10 <- read_csv('https://raw.githubusercontent.com/Lake-City-LTRM/hydrology/refs/heads/main/data/q_ld10_collated.csv')
+dat_q_ld4 <- read_csv('https://raw.githubusercontent.com/Lake-City-LTRM/hydrology/refs/heads/main/data/q_ld4_collated.csv')
+dat_q_ld8 <- read_csv("https://raw.githubusercontent.com/Lake-City-LTRM/hydrology/refs/heads/main/data/q_ld8_collated.csv")
+dat_q_ld10 <- read_csv('https://raw.githubusercontent.com/Lake-City-LTRM/hydrology/refs/heads/main/data/q_ld10_collated.csv')
 
+## alternative data read - using copies of .csv files - for when the urls were not working
 #______i) LD4----
-dat_q_ld4 <- read_csv('data/q_ld4_collated.csv')
+#dat_q_ld4 <- read_csv('data/q_ld4_collated.csv')
 
 #______ii) LD8----
-dat_q_ld8 <- read_csv('data/q_ld8_collated.csv')
+#dat_q_ld8 <- read_csv('data/q_ld8_collated.csv')
 
 #______iii) LD10----
-dat_q_ld10 <- read_csv('data/q_ld10_collated.csv')
+#dat_q_ld10 <- read_csv('data/q_ld10_collated.csv')
 
 
 
